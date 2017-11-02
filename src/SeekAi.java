@@ -1,6 +1,8 @@
 import processing.core.PApplet;
 import processing.core.PVector;
 
+import static processing.core.PApplet.cos;
+import static processing.core.PApplet.sin;
 import static processing.core.PConstants.PI;
 
 public class SeekAi {
@@ -10,6 +12,7 @@ public class SeekAi {
     final float MAX_ROTATION = PI / 4;
     final float width = 600;
     final float height = 600;
+    final int size = 20;
 
 
     // I'm allowing public access to keep things snappy
@@ -35,6 +38,15 @@ public class SeekAi {
 
     // update position, orientation, velocity and rotation
     public void integrate(PVector targetPos, float angular) {
+        float xe = position.x, ye = position.y;
+        applet.fill(255, 0, 0);
+        applet.ellipse(xe, ye, 30, 30);
+        // Show orientation
+        int newxe = (int) (xe + 10 * cos(orientation));
+        int newye = (int) (ye + 10 * sin(orientation));
+        applet.fill(0);
+        applet.ellipse(newxe, newye, size, size);
+
         position.add(velocity);
         // Apply an impulse to bounce off the edge of the screen
         if ((position.x < 0) || (position.x > width)) velocity.x = -velocity.x;

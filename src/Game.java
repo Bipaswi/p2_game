@@ -2,6 +2,7 @@ import processing.core.PApplet;
 import processing.core.PVector;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Game extends PApplet {
 
@@ -16,10 +17,16 @@ public class Game extends PApplet {
     static final int PLAYER_VEL = 3;
     final int SEP_THRESHOLD = 50 ;
     final float MAX_ACCEL = 10f ;
+    int currentWave = 0;
+    int waveTimer;
+    int interval;
+
     Character player;
-    SeekAi chaseAI;
+    ArrayList<SeekAi> chaseAIs;
     RunAi runAi;
     PVector pursueTarget, direction, runAccel;
+
+    private int numSeekAis = 10;
 
     private int targetX = MY_WIDTH / 2;
     private int targetY = MY_HEIGHT / 2;
@@ -27,6 +34,9 @@ public class Game extends PApplet {
     PVector targetVel;
     ArrayList<Bullet> bullet;
     static final int DIAM = 48, SPD = 4, FPS = 60;
+
+
+    ArrayList<Missile> missiles;
 
     public void settings() {
         size(MY_WIDTH, MY_HEIGHT);
@@ -36,14 +46,16 @@ public class Game extends PApplet {
     public void setup() {
         frameRate(FPS);
         player = new Character(MY_WIDTH / 2, MY_HEIGHT / 2, 0f, 0f, 0f, this);
-        chaseAI = new SeekAi(0, 0, 0f, 1f, 1f, 0f, this);
+        //chaseAI = new SeekAi(0, 0, 0f, 1f, 1f, 0f, this);
+        chaseAIs = new ArrayList<>();
+//        this.chaseAIs = createChaseAi();
         runAi = new RunAi(MY_WIDTH / 2, MY_HEIGHT / 2, 0f, 1f, 1f, this);
-
         runAccel = new PVector(0, 0);
         pursueTarget = new PVector(0, 0);
         direction = new PVector(0, 0);
         targetVel = new PVector(0, 0);
         bullet = new ArrayList<>();
+        missiles = new ArrayList<>();
     }
 
     // Example of how the character might be depicted.
@@ -72,42 +84,89 @@ public class Game extends PApplet {
         runAi.integrate(runAccel);
 
 
-        for (int i = 0; i < bullet.size(); i++) {
-            if (bullet.get(i).timer <= 0) {
-                bullet.remove(i);
-            }
-        }
+//        for (int i = 0; i < bullet.size(); i++) {
+//            if (bullet.get(i).timer <= 0) {
+//                bullet.remove(i);
+//            }
+//        }
 
-        for (int i = 0; i < bullet.size(); i++) {
-            Bullet missile = bullet.get(i);
-            float d = dist(bullet.get(i).position.x, bullet.get(i).position.y, bullet.get(i).start.x, bullet.get(i).start.y);
-            if ((bullet.get(i).size > d)) {
-                missile.explode();
-                //for (int j =0; j < numMeteors; j++){
-                //    detectMissileCollision(meteors.get(j), bullet.get(i));
-                //}
-            } else {
-                missile.project();
-            }
+//        for (int i = 0; i < bullet.size(); i++) {
+//            Bullet missile = bullet.get(i);
+//            float d = dist(bullet.get(i).position.x, bullet.get(i).position.y, bullet.get(i).start.x, bullet.get(i).start.y);
+//            //if ((bullet.get(i).size > d)) {
+//            //    missile.explode();
+////                for (int j =0; j < numBullets; j++){
+////                    detectBulletCollision(chaseAIs.get(j), missile);
+////                }
+//            //} else {
+//               missile.project();
+//            //}
+//
+//        }
+
+        for (Missile missile: missiles){
+            missile.integrate();
+            ellipse(missile.position.x, missile.position.y, 2, 2);
         }
 
         player.updatePlayer();
         player.confinePlayer();
         player.displayPlayer();
 
-        float xe = chaseAI.position.x, ye = chaseAI.position.y;
-        fill(255, 0, 0);
-        ellipse(xe, ye, 30, 30);
-        // Show orientation
-        int newxe = (int) (xe + 10 * cos(chaseAI.orientation));
-        int newye = (int) (ye + 10 * sin(chaseAI.orientation));
-        fill(0);
-        ellipse(newxe, newye, 10, 10);
         //float prediction = distance / speed ;
-        chaseAI.integrate(player.position, 0);
+        for (int i = 0; i < chaseAIs.size(); i++) {
+            chaseAIs.get(i).integrate(player.position, 0);
+        }
+//        updateWave();
     }
 
-    //need to create different ai over here
+    public void detectBulletCollision(SeekAi ai, Bullet bullet){
+        float d = dist(ai.position.x, ai.position.y, bullet.position.x, bullet.position.y);
+        if ((ai.size/2 + bullet.size/2 > d)) {
+            //chaseAIs.;
+            System.out.println("Here");
+        }
+    }
+
+    public ArrayList<SeekAi> createChaseAi(){
+        ArrayList<SeekAi> seekAi = new ArrayList<>();
+        for (int i = 0; i < numSeekAis; i++){
+            Random generator = new Random();
+            int x = generator.nextInt(MY_WIDTH) + 1;
+            int y = generator.nextInt(MY_HEIGHT) + 1;
+            seekAi.add(new SeekAi(x, y, 0f, 1f, 1f, 0f, this));
+        }
+        return seekAi;
+    }
+
+    public boolean waveFinished(){
+        if (waveTimer == 0) {
+            return true;
+        } else {
+            waveTimer--;
+            return false;
+        }
+    }
+
+    public void updateWave(){
+        if (waveFinished()){
+            if (interval > 0){
+                background(0);
+                textSize(20);
+                text("Wave " + currentWave + " End", 350, 300);
+                interval--;
+            } else {
+                numBullets += 10;
+                currentWave++;
+                numSeekAis += 5;
+                this.chaseAIs = createChaseAi();
+                waveTimer = 1000;
+                interval = 200;
+            }
+        }
+    }
+
+
     //as you progress through levels, different ai come after you
     //create a trapping ai?
     //add health to player, if ai touches player, subtract health
@@ -118,14 +177,24 @@ public class Game extends PApplet {
     // Update targetVel
     public void mousePressed() {
         if (mouseButton == LEFT) {
-            targetX = mouseX;
-            targetY = mouseY;
+
+            shootMissile(mouseX, mouseY);
+
         } else if (mouseButton == RIGHT) {
             bullet.add(new Bullet(player.position.x, player.position.y, true, mouseX, mouseY, this));
             numBullets--;
         } else {
             fill(126);
         }
+    }
+
+    private void shootMissile(int mouseX, int mouseY) {
+        PVector missileVelocity = new PVector(mouseX, mouseY);
+        missileVelocity.sub(player.position.copy()).normalize();
+
+        missileVelocity.mult(100);
+        missiles.add(new Missile(player.position.copy(), missileVelocity));
+        // need to remove bullets once they are out of bounds
     }
 
     public void keyPressed() {

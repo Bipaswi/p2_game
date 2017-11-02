@@ -28,6 +28,7 @@ public class Bullet {
         }
 
         public void project() {
+            //velocity = new PVector(position.x - start.x, position.y - start.y);
             velocity = new PVector(position.x - start.x, position.y - start.y);
             velocity.normalize();
             velocity.mult(magnitude);
@@ -36,16 +37,4 @@ public class Bullet {
             applet.fill(color);
             applet.ellipse(start.x, start.y,size,size);
         }
-
-        public void explode() {
-            if (timer > 0){
-                timer-=1.5;
-                size+=2.5;
-                transparency-=2;
-            }
-            applet.noStroke();
-            applet.fill(color,transparency);
-            applet.ellipse(position.x, position.y,size,size);
-        }
-
 }
