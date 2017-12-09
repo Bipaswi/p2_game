@@ -2,7 +2,6 @@ import processing.core.PApplet;
 import processing.core.PVector;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class Game extends PApplet {
 
@@ -12,31 +11,15 @@ public class Game extends PApplet {
 
     final public int MY_WIDTH = 600;
     final public int MY_HEIGHT = 600;
-    final public static int STARTING_BULLETS = 5;
-    public static int numBullets = 10;
-    static final int PLAYER_VEL = 3;
-    final int SEP_THRESHOLD = 50 ;
-    final float MAX_ACCEL = 10f ;
-    int currentWave = 0;
-    int waveTimer;
-    int interval;
-
-    Character player;
-    ArrayList<SeekAi> chaseAIs;
-    RunAi runAi;
-    PVector pursueTarget, direction, runAccel;
-
-    private int numSeekAis = 10;
-
-    private int targetX = MY_WIDTH / 2;
-    private int targetY = MY_HEIGHT / 2;
-
-    PVector targetVel;
-    ArrayList<Bullet> bullet;
-    static final int DIAM = 48, SPD = 4, FPS = 60;
-
-
-    ArrayList<Missile> missiles;
+    static final int FPS = 60;
+    boolean[] isKeyPressed = new boolean[256];
+    Player player;
+    TrackWorld track;
+    CircuitAi testAi;
+    public ArrayList<String> blocked = new ArrayList<>();
+    boolean blocking;
+    float speed = 0.2f;
+    float initialVel = 0.9f;
 
     public void settings() {
         size(MY_WIDTH, MY_HEIGHT);
@@ -45,174 +28,127 @@ public class Game extends PApplet {
 
     public void setup() {
         frameRate(FPS);
-        player = new Character(MY_WIDTH / 2, MY_HEIGHT / 2, 0f, 0f, 0f, this);
-        //chaseAI = new SeekAi(0, 0, 0f, 1f, 1f, 0f, this);
-        chaseAIs = new ArrayList<>();
-//        this.chaseAIs = createChaseAi();
-        runAi = new RunAi(MY_WIDTH / 2, MY_HEIGHT / 2, 0f, 1f, 1f, this);
-        runAccel = new PVector(0, 0);
-        pursueTarget = new PVector(0, 0);
-        direction = new PVector(0, 0);
-        targetVel = new PVector(0, 0);
-        bullet = new ArrayList<>();
-        missiles = new ArrayList<>();
+        player = new Player(300, 300, 0f, 0f, 0f, 10, this);
+        track = new TrackWorld(300, 300, 0f, 0f, this);
+        testAi = new CircuitAi(285, 300, 0f, 0f, 0.2f, 10, this);
+        track.createTrack();
     }
 
-    // Example of how the character might be depicted.
     public void draw() {
         background(128);
-
-        // Draw running ai
-        float xr = runAi.position.x, yr = runAi.position.y;
-        fill(255, 0, 0);
-        ellipse(xr, yr, 30, 30);
-        // Show orientation
-        int newxr = (int) (xr + 10 * cos(runAi.orientation));
-        int newyr = (int) (yr + 10 * sin(runAi.orientation));
-        fill(0);
-        ellipse(newxr, newyr, 10, 10);
-
-        runAccel.x = 0;
-        runAccel.y = 0;
-        PVector fe = new PVector(runAi.position.x - player.position.x, runAi.position.y - player.position.y);
-        float feDistance = fe.mag();
-        if (feDistance < SEP_THRESHOLD) {
-            fe.normalize();
-            fe.mult(MAX_ACCEL * (SEP_THRESHOLD - feDistance) / SEP_THRESHOLD);
-            runAccel.add(fe);
-        }
-        runAi.integrate(runAccel);
-
-
-//        for (int i = 0; i < bullet.size(); i++) {
-//            if (bullet.get(i).timer <= 0) {
-//                bullet.remove(i);
-//            }
-//        }
-
-//        for (int i = 0; i < bullet.size(); i++) {
-//            Bullet missile = bullet.get(i);
-//            float d = dist(bullet.get(i).position.x, bullet.get(i).position.y, bullet.get(i).start.x, bullet.get(i).start.y);
-//            //if ((bullet.get(i).size > d)) {
-//            //    missile.explode();
-////                for (int j =0; j < numBullets; j++){
-////                    detectBulletCollision(chaseAIs.get(j), missile);
-////                }
-//            //} else {
-//               missile.project();
-//            //}
-//
-//        }
-
-        for (Missile missile: missiles){
-            missile.integrate();
-            ellipse(missile.position.x, missile.position.y, 2, 2);
-        }
-
-        player.updatePlayer();
-        player.confinePlayer();
-        player.displayPlayer();
-
-        //float prediction = distance / speed ;
-        for (int i = 0; i < chaseAIs.size(); i++) {
-            chaseAIs.get(i).integrate(player.position, 0);
-        }
-//        updateWave();
+        player.displayPlayer(255, 255, 255);
+        testAi.velocity = track.velocity;
+        testAi.move();
+        //wallLocation();
+        //Push push = new Push(1);
+        //forceRegistry.add(testAi, push);
+        collision();
+        movePlayer();
     }
 
-    public void detectBulletCollision(SeekAi ai, Bullet bullet){
-        float d = dist(ai.position.x, ai.position.y, bullet.position.x, bullet.position.y);
-        if ((ai.size/2 + bullet.size/2 > d)) {
-            //chaseAIs.;
-            System.out.println("Here");
-        }
-    }
+    //find out which cell racer is in, update force left, right, up or down
 
-    public ArrayList<SeekAi> createChaseAi(){
-        ArrayList<SeekAi> seekAi = new ArrayList<>();
-        for (int i = 0; i < numSeekAis; i++){
-            Random generator = new Random();
-            int x = generator.nextInt(MY_WIDTH) + 1;
-            int y = generator.nextInt(MY_HEIGHT) + 1;
-            seekAi.add(new SeekAi(x, y, 0f, 1f, 1f, 0f, this));
-        }
-        return seekAi;
-    }
-
-    public boolean waveFinished(){
-        if (waveTimer == 0) {
-            return true;
-        } else {
-            waveTimer--;
-            return false;
-        }
-    }
-
-    public void updateWave(){
-        if (waveFinished()){
-            if (interval > 0){
-                background(0);
-                textSize(20);
-                text("Wave " + currentWave + " End", 350, 300);
-                interval--;
-            } else {
-                numBullets += 10;
-                currentWave++;
-                numSeekAis += 5;
-                this.chaseAIs = createChaseAi();
-                waveTimer = 1000;
-                interval = 200;
+    public void collision() {
+        for (int x = 0; x < track.worldSize; x++) {
+            for (int y = 0; y < track.worldSize; y++) {
+                if (track.gameTrack[x][y].switchOn) {
+                    int width = track.gameTrack[x][y].width;
+                    int height = track.gameTrack[x][y].height;
+                    PVector position = track.gameTrack[x][y].position;
+                    CollisionDetected(position.x, position.y, width, height, player.position.x, player.position.y, player.size, player.size, x, y);
+                }
             }
         }
     }
 
-
-    //as you progress through levels, different ai come after you
-    //create a trapping ai?
-    //add health to player, if ai touches player, subtract health
-    //need to add collisions
-    //enemies start in random places, preferably in corners
-
-
-    // Update targetVel
-    public void mousePressed() {
-        if (mouseButton == LEFT) {
-
-            shootMissile(mouseX, mouseY);
-
-        } else if (mouseButton == RIGHT) {
-            bullet.add(new Bullet(player.position.x, player.position.y, true, mouseX, mouseY, this));
-            numBullets--;
-        } else {
-            fill(126);
+    // adapted from 13006099
+    public void CollisionDetected(float rPosx, float rPosy, float rWidth, float rHeight, float pPosx, float pPosy, float pWidth, float pHeight, int x, int y) {
+       // boolean hasCollided = false;
+        if (pPosy <= rPosy + rHeight &&
+                pPosy + pHeight >= rPosy + rHeight &&
+                (pPosx + pWidth >= rPosx && pPosx <= rPosx + rWidth) &&
+                !isNeighbour(x, y, "s")) {
+            track.gameTrack[x][y].setColor(0, 255, 0);
+            //System.out.println("collision top");
+            track.velocity.y = -speed / initialVel;
+            //return track.gameTrack[x][y];
         }
+        if (pPosy + pHeight >= rPosy &&
+                pPosy <= rPosy &&
+                (pPosx + pWidth >= rPosx && pPosx <= rPosx + rWidth) &&
+                !isNeighbour(x, y, "w")) {
+            track.gameTrack[x][y].setColor(0, 0, 255);
+            //System.out.println("collision bottom");
+            track.velocity.y = speed / initialVel;
+            //hasCollided = true;
+        }
+        if (pPosx + pWidth >= rPosx &&
+                pPosx <= rPosx &&
+                (pPosy + pHeight >= rPosy && pPosy <= rPosy + rHeight) &&
+                !isNeighbour(x, y, "l")) {
+            track.gameTrack[x][y].setColor(255, 0, 0);
+            //System.out.println("collision right");
+            track.velocity.x = speed / initialVel;
+            //hasCollided = true;
+        }
+        if (pPosx <= rPosx + rWidth &&
+                pPosx + pWidth >= rPosx + rWidth &&
+                (pPosy + pHeight >= rPosy && pPosy <= rPosy + rHeight) &&
+                !isNeighbour(x, y, "r")) {
+            track.gameTrack[x][y].setColor(1, 1, 1);
+            //System.out.println("collision left");
+            track.velocity.x = -speed / initialVel;
+            //hasCollided = true;
+        }
+
     }
 
-    private void shootMissile(int mouseX, int mouseY) {
-        PVector missileVelocity = new PVector(mouseX, mouseY);
-        missileVelocity.sub(player.position.copy()).normalize();
+    // adapted from 13006099
+    public boolean isNeighbour(int x, int y, String dir) {
+        if (y < 1 || y >= track.worldSize - 1 || x < 1 || x >= track.worldSize - 1) {
+            return false;
+        }
+        if (dir == "s" && track.gameTrack[x][y + 1].switchOn) {
+            return true;
+        }
+        if (dir == "w" && track.gameTrack[x][y - 1].switchOn) {
+            return true;
+        }
+        if (dir == "r" && track.gameTrack[x + 1][y].switchOn) {
+            return true;
+        }
+        if (dir == "l" && track.gameTrack[x - 1][y].switchOn) {
+            return true;
+        }
+        return false;
+    }
 
-        missileVelocity.mult(100);
-        missiles.add(new Missile(player.position.copy(), missileVelocity));
-        // need to remove bullets once they are out of bounds
+    public void movePlayer() {
+        track.velocity.x *= initialVel;
+        track.velocity.y *= initialVel;
+
+        if (isKeyPressed[LEFT]) {
+            track.velocity.x += speed;
+        }
+        if (isKeyPressed[RIGHT]) {
+            track.velocity.x -= speed;
+        }
+        if (isKeyPressed[UP]) {
+            track.velocity.y += speed;
+        }
+        if (isKeyPressed[DOWN]) {
+            track.velocity.y -= speed;
+        }
+        //adding the velocity here
+        track.updateTrack();
+        track.displayTrack();
     }
 
     public void keyPressed() {
-        final int k = keyCode;
-        if (k == LEFT | k == 'A') player.velocity.x = -PLAYER_VEL;
-        else if (k == RIGHT | k == 'D') player.velocity.x = PLAYER_VEL;
-        else if (k == UP | k == 'W') player.velocity.y = -PLAYER_VEL;
-        else if (k == DOWN | k == 'S') player.velocity.y = PLAYER_VEL;
+        isKeyPressed[keyCode] = true;
     }
 
     public void keyReleased() {
-        final int k = keyCode;
-        if (k == LEFT | k == 'A' && player.velocity.x < 0
-                || k == RIGHT | k == 'D' && player.velocity.x > 0)
-            player.velocity.x = 0;
-
-        else if (k == UP | k == 'W' && player.velocity.y < 0
-                || k == DOWN | k == 'S' && player.velocity.y > 0)
-            player.velocity.y = 0;
+        isKeyPressed[keyCode] = false;
     }
 }
