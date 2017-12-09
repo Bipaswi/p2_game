@@ -6,18 +6,16 @@ final class CircuitAi {
     public PVector position;
     public PVector velocity;
     private PVector forceAccumulator;
+    public PVector linear;
     private float invMass;
+    final float MAX_ACCEL = 0.1f;
     private int timer;
-    public int explosionTimer = 60;
-    public int transparency = 255;
-    public int explosionSize = 50;
     private int size;
     PApplet applet;
-    //color c;
-
-    public float getMass() {
-        return 1 / invMass;
-    }
+    public PVector target;
+    public int currentCell;
+    public final float MAX_SPEED = 1f;
+    public float currentSpeed;
 
     CircuitAi(int x, int y, float xVel, float yVel, float invM, int size, PApplet applet) {
         position = new PVector(x, y);
@@ -27,8 +25,17 @@ final class CircuitAi {
         this.timer = timer;
         this.size = size;
         this.applet = applet;
+        linear = new PVector(0, 0);
+        target = this.position;
+        this.currentCell = 0;
+        currentSpeed = MAX_SPEED; // change this to change speed difference
         //c = color(random(255),random(255),random(255));
+    }
 
+    public boolean targetReached(){
+        if(this.position.equals(target))
+            return true;
+        return false;
     }
 
     // Add a force to the accumulator
@@ -36,18 +43,50 @@ final class CircuitAi {
         forceAccumulator.add(force);
     }
 
-    void move() {
-        //if (invMass <= 0f) return;
+    public void integrate() {
+
+        //change varibalese
         position.add(velocity);
 
-//        PVector resultingAcceleration = forceAccumulator.get();
-//        resultingAcceleration.mult(invMass);
-//        velocity.add(resultingAcceleration);
-//        forceAccumulator.x = 0;
-//        forceAccumulator.y = 0;
+        PVector pos = target.copy();
+        PVector distance = pos.sub(position);
+        velocity = distance.copy();
+        if(distance.mag() > currentSpeed){
+            velocity.normalize();
+            velocity.mult(currentSpeed);
+        }
 
-        applet.fill(138, 160, 166);
-        applet.noStroke();
-        applet.rect(position.x, position.y, size, size);
+
+
+
+
+//
+//        float xe = position.x, ye = position.y;
+//
+//        linear.x = target.x - position.x;
+//        linear.y = target.y - position.y;
+//
+//        linear.normalize();
+//        linear.mult(MAX_ACCEL);
+//        velocity.add(linear);
+//        if (velocity.mag() > 2f) {
+//            velocity.normalize();
+//            velocity.mult(MAX_SPEED);
+//        }
+//        position.add(velocity);
+//
+//
+        applet.fill(192, 192, 192);
+        applet.ellipse(position.x, position.y, size, size);
     }
+
+
+//    void move() {
+//        //if (invMass <= 0f) return;
+//        position.add(velocity);
+//
+//        applet.fill(138, 160, 166);
+//        applet.noStroke();
+//        applet.rect(position.x, position.y, size, size);
+//    }
 }

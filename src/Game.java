@@ -30,23 +30,48 @@ public class Game extends PApplet {
         frameRate(FPS);
         player = new Player(300, 300, 0f, 0f, 0f, 10, this);
         track = new TrackWorld(300, 300, 0f, 0f, this);
-        testAi = new CircuitAi(285, 300, 0f, 0f, 0.2f, 10, this);
+        testAi = new CircuitAi(285, 300, 1f, 1f, 0.2f, 10, this);
         track.createTrack();
     }
 
     public void draw() {
         background(128);
         player.displayPlayer(255, 255, 255);
-        testAi.velocity = track.velocity;
-        testAi.move();
-        //wallLocation();
-        //Push push = new Push(1);
-        //forceRegistry.add(testAi, push);
+        testAi.integrate();
+        moveAi();
+//        TrackWall wall = track.gameTrack[7][8];
+//
+//        //if (!wall.switchOn && wall.count==1) {
+//            System.out.println(wall.count);
+//            PVector centre = wall.getCentre();
+//            testAi.integrate(centre);
+        //}
+
         collision();
         movePlayer();
     }
 
-    //find out which cell racer is in, update force left, right, up or down
+    //update ai target
+    public void moveAi() {
+            if (testAi.targetReached()) {
+                testAi.target = track.trackWalls.get(testAi.currentCell+1).getCentre();
+                System.out.println(testAi.target);
+                testAi.currentCell++;
+            }
+
+        //}
+//        for (int x = 0; x < track.worldSize; x++) {
+//            for (int y = 0; y < track.worldSize; y++) {
+//                TrackWall wall = track.gameTrack[x][y];
+//                if (!wall.switchOn && testAi.targetReached() && wall.wallNumber ) {
+//                    PVector centre = wall.getCentre();
+//                    testAi.target = centre;
+//                    System.out.println(wall.count);
+//                    testAi.integrate(centre);
+//                }
+//            }
+//        }
+    }
 
     public void collision() {
         for (int x = 0; x < track.worldSize; x++) {
@@ -63,7 +88,7 @@ public class Game extends PApplet {
 
     // adapted from 13006099
     public void CollisionDetected(float rPosx, float rPosy, float rWidth, float rHeight, float pPosx, float pPosy, float pWidth, float pHeight, int x, int y) {
-       // boolean hasCollided = false;
+        // boolean hasCollided = false;
         if (pPosy <= rPosy + rHeight &&
                 pPosy + pHeight >= rPosy + rHeight &&
                 (pPosx + pWidth >= rPosx && pPosx <= rPosx + rWidth) &&
