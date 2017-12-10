@@ -37,40 +37,24 @@ public class Game extends PApplet {
     public void draw() {
         background(128);
         player.displayPlayer(255, 255, 255);
-        testAi.integrate();
+        testAi.integrate(track.velocity);
         moveAi();
-//        TrackWall wall = track.gameTrack[7][8];
-//
-//        //if (!wall.switchOn && wall.count==1) {
-//            System.out.println(wall.count);
-//            PVector centre = wall.getCentre();
-//            testAi.integrate(centre);
-        //}
-
         collision();
         movePlayer();
     }
 
     //update ai target
     public void moveAi() {
-            if (testAi.targetReached()) {
+        if (testAi.currentCell+1 >= track.trackWalls.size()) {
+            testAi.currentCell = 0;
+            testAi.target = track.trackWalls.get(testAi.currentCell).getCentre();
+            System.out.println("here");
+        }
+        if (testAi.targetReached() && testAi.currentCell+1 < track.trackWalls.size()) {
                 testAi.target = track.trackWalls.get(testAi.currentCell+1).getCentre();
                 System.out.println(testAi.target);
                 testAi.currentCell++;
-            }
-
-        //}
-//        for (int x = 0; x < track.worldSize; x++) {
-//            for (int y = 0; y < track.worldSize; y++) {
-//                TrackWall wall = track.gameTrack[x][y];
-//                if (!wall.switchOn && testAi.targetReached() && wall.wallNumber ) {
-//                    PVector centre = wall.getCentre();
-//                    testAi.target = centre;
-//                    System.out.println(wall.count);
-//                    testAi.integrate(centre);
-//                }
-//            }
-//        }
+        }
     }
 
     public void collision() {
@@ -86,7 +70,7 @@ public class Game extends PApplet {
         }
     }
 
-    // adapted from 13006099
+    // adapted from 130006099
     public void CollisionDetected(float rPosx, float rPosy, float rWidth, float rHeight, float pPosx, float pPosy, float pWidth, float pHeight, int x, int y) {
         // boolean hasCollided = false;
         if (pPosy <= rPosy + rHeight &&
@@ -128,7 +112,7 @@ public class Game extends PApplet {
 
     }
 
-    // adapted from 13006099
+    // adapted from 130006099
     public boolean isNeighbour(int x, int y, String dir) {
         if (y < 1 || y >= track.worldSize - 1 || x < 1 || x >= track.worldSize - 1) {
             return false;

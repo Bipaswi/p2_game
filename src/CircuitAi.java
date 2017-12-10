@@ -14,7 +14,7 @@ final class CircuitAi {
     PApplet applet;
     public PVector target;
     public int currentCell;
-    public final float MAX_SPEED = 1f;
+    public final float MAX_SPEED = 2f;
     public float currentSpeed;
 
     CircuitAi(int x, int y, float xVel, float yVel, float invM, int size, PApplet applet) {
@@ -38,14 +38,10 @@ final class CircuitAi {
         return false;
     }
 
-    // Add a force to the accumulator
-    void addForce(PVector force) {
-        forceAccumulator.add(force);
-    }
 
-    public void integrate() {
-
-        //change varibalese
+    public void integrate(PVector worldVel) {
+        position.add(worldVel);
+        target.add(worldVel);
         position.add(velocity);
 
         PVector pos = target.copy();
@@ -56,37 +52,7 @@ final class CircuitAi {
             velocity.mult(currentSpeed);
         }
 
-
-
-
-
-//
-//        float xe = position.x, ye = position.y;
-//
-//        linear.x = target.x - position.x;
-//        linear.y = target.y - position.y;
-//
-//        linear.normalize();
-//        linear.mult(MAX_ACCEL);
-//        velocity.add(linear);
-//        if (velocity.mag() > 2f) {
-//            velocity.normalize();
-//            velocity.mult(MAX_SPEED);
-//        }
-//        position.add(velocity);
-//
-//
         applet.fill(192, 192, 192);
-        applet.ellipse(position.x, position.y, size, size);
+        applet.rect(position.x, position.y, size, size);
     }
-
-
-//    void move() {
-//        //if (invMass <= 0f) return;
-//        position.add(velocity);
-//
-//        applet.fill(138, 160, 166);
-//        applet.noStroke();
-//        applet.rect(position.x, position.y, size, size);
-//    }
 }
