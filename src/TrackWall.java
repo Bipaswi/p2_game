@@ -12,8 +12,8 @@ public class TrackWall extends TrackWorld{
     public int wallNumber = 0;
     public int color;
 
-    TrackWall(float x, float y, float xVel, float yVel, int width, int height, boolean switchOn, PApplet applet) {
-        super(x, y, xVel, yVel, applet);
+    TrackWall(float x, float y, float xVel, float yVel, PVector camera, int width, int height, boolean switchOn, PApplet applet) {
+        super(x, y, xVel, yVel, camera, applet);
         position = new PVector(x, y);
         velocity = new PVector(xVel, yVel);
         this.width = width;
@@ -28,10 +28,10 @@ public class TrackWall extends TrackWorld{
         return center;
     }
 
-    public void displayWall() {
+    public void displayWall(PVector camera) {
         if(switchOn) {
             applet.fill(this.color);
-            applet.rect(position.x, position.y, width, height);
+            applet.rect(position.x - camera.x, position.y - camera.y, width, height);
         }
     }
 

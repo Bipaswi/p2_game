@@ -20,6 +20,7 @@ public class Game extends PApplet {
     boolean blocking;
     float speed = 0.2f;
     float initialVel = 0.9f;
+    public PVector camera = new PVector(0,0);
 
     public void settings() {
         size(MY_WIDTH, MY_HEIGHT);
@@ -29,27 +30,28 @@ public class Game extends PApplet {
     public void setup() {
         frameRate(FPS);
         player = new Player(300, 300, 0f, 0f, 0f, 10, this);
-        track = new TrackWorld(300, 300, 0f, 0f, this);
-        testAi = new CircuitAi(285, 300, 1f, 1f, 0.2f, 10, this);
+        track = new TrackWorld(300, 300, 0f, 0f, camera, this);
+        testAi = new CircuitAi(285, 300, 1f, 1f, 0.2f, 10, camera,this);
         track.createTrack();
     }
 
     public void draw() {
         background(128);
-        player.displayPlayer(255, 255, 255);
-        testAi.integrate(track.velocity);
+        //player.displayPlayer(255, 255, 255);
+        testAi.integrate(camera);
         moveAi();
         collision();
         movePlayer();
+        track.displayTrack();
     }
 
     //update ai target
     public void moveAi() {
-        if (testAi.currentCell+1 >= track.trackWalls.size()) {
-            testAi.currentCell = 0;
-            testAi.target = track.trackWalls.get(testAi.currentCell).getCentre();
-            System.out.println("here");
-        }
+//        if (testAi.currentCell+1 >= track.trackWalls.size()) {
+//            testAi.currentCell = 0;
+//            testAi.target = track.trackWalls.get(testAi.currentCell).getCentre();
+//            System.out.println("here");
+//        }
         if (testAi.targetReached() && testAi.currentCell+1 < track.trackWalls.size()) {
                 testAi.target = track.trackWalls.get(testAi.currentCell+1).getCentre();
                 System.out.println(testAi.target);
@@ -79,7 +81,8 @@ public class Game extends PApplet {
                 !isNeighbour(x, y, "s")) {
             track.gameTrack[x][y].setColor(0, 255, 0);
             //System.out.println("collision top");
-            track.velocity.y = -speed / initialVel;
+            //track.velocity.y = -speed / initialVel;
+            player.velocity.y =+ speed / initialVel;
             //return track.gameTrack[x][y];
         }
         if (pPosy + pHeight >= rPosy &&
@@ -88,7 +91,8 @@ public class Game extends PApplet {
                 !isNeighbour(x, y, "w")) {
             track.gameTrack[x][y].setColor(0, 0, 255);
             //System.out.println("collision bottom");
-            track.velocity.y = speed / initialVel;
+            //track.velocity.y = speed / initialVel;
+            player.velocity.y =- speed / initialVel;
             //hasCollided = true;
         }
         if (pPosx + pWidth >= rPosx &&
@@ -97,7 +101,8 @@ public class Game extends PApplet {
                 !isNeighbour(x, y, "l")) {
             track.gameTrack[x][y].setColor(255, 0, 0);
             //System.out.println("collision right");
-            track.velocity.x = speed / initialVel;
+            //track.velocity.x = speed / initialVel;
+            player.velocity.x =- speed / initialVel;
             //hasCollided = true;
         }
         if (pPosx <= rPosx + rWidth &&
@@ -106,7 +111,8 @@ public class Game extends PApplet {
                 !isNeighbour(x, y, "r")) {
             track.gameTrack[x][y].setColor(1, 1, 1);
             //System.out.println("collision left");
-            track.velocity.x = -speed / initialVel;
+            //track.velocity.x = -speed / initialVel;
+            player.velocity.x =+ speed / initialVel;
             //hasCollided = true;
         }
 
@@ -133,24 +139,28 @@ public class Game extends PApplet {
     }
 
     public void movePlayer() {
-        track.velocity.x *= initialVel;
-        track.velocity.y *= initialVel;
+        player.velocity.x *= initialVel;
+        player.velocity.y *= initialVel;
 
         if (isKeyPressed[LEFT]) {
-            track.velocity.x += speed;
+            player.velocity.x -= speed;
         }
         if (isKeyPressed[RIGHT]) {
-            track.velocity.x -= speed;
+            player.velocity.x += speed;
         }
         if (isKeyPressed[UP]) {
-            track.velocity.y += speed;
+            player.velocity.y -= speed;
         }
         if (isKeyPressed[DOWN]) {
-            track.velocity.y -= speed;
+            player.velocity.y += speed;
         }
         //adding the velocity here
-        track.updateTrack();
-        track.displayTrack();
+//        track.updateTrack();
+//        track.displayTrack();
+        player.updatePlayer();
+        camera.x = (player.position.x - MY_WIDTH/2);
+        camera.y = (player.position.y - MY_HEIGHT/2);
+        player.displayPlayer(255, 255, 40, camera);
     }
 
     public void keyPressed() {
