@@ -1,8 +1,6 @@
 import processing.core.PApplet;
 import processing.core.PVector;
 
-import java.util.ArrayList;
-
 public class Game extends PApplet {
 
     public static void main(String[] args) {
@@ -13,14 +11,18 @@ public class Game extends PApplet {
     final public int MY_HEIGHT = 600;
     static final int FPS = 60;
     boolean[] isKeyPressed = new boolean[256];
+
+    //storing game objects here
     Player player;
     TrackWorld track;
     CircuitAi testAi;
-    public ArrayList<String> blocked = new ArrayList<>();
-    boolean blocking;
-    float speed = 0.2f;
+    Obstacle testObstacle;
+    float speed = 0.3f;
     float initialVel = 0.9f;
-    public PVector camera = new PVector(0,0);
+    public PVector camera = new PVector(0, 0);
+    int laps = 3;
+    int lapCount = 0;
+
 
     public void settings() {
         size(MY_WIDTH, MY_HEIGHT);
@@ -29,47 +31,76 @@ public class Game extends PApplet {
 
     public void setup() {
         frameRate(FPS);
-        player = new Player(300, 300, 0f, 0f, 0f, 10, this);
-        track = new TrackWorld(300, 300, 0f, 0f, camera, this);
-        testAi = new CircuitAi(285, 300, 1f, 1f, 0.2f, 10, camera,this);
+        player = new Player(750, 750, 10, this);
+        track = new TrackWorld(300, 300, 0f, 0f, this);
+        testAi = new CircuitAi(735, 750, 1f, 1f, 0.2f, 10, this);
+        //testObstacle = new Obstacle(300, 210, 10, this);
         track.createTrack();
+
     }
 
     public void draw() {
         background(128);
-        //player.displayPlayer(255, 255, 255);
         testAi.integrate(camera);
         moveAi();
         collision();
         movePlayer();
-        track.displayTrack();
+        //testObstacle.display(camera);
+        track.displayTrack(camera);
+        //finishGame();
     }
 
     //update ai target
     public void moveAi() {
-//        if (testAi.currentCell+1 >= track.trackWalls.size()) {
-//            testAi.currentCell = 0;
-//            testAi.target = track.trackWalls.get(testAi.currentCell).getCentre();
-//            System.out.println("here");
-//        }
-        if (testAi.targetReached() && testAi.currentCell+1 < track.trackWalls.size()) {
-                testAi.target = track.trackWalls.get(testAi.currentCell+1).getCentre();
-                System.out.println(testAi.target);
-                testAi.currentCell++;
+        if (testAi.currentCell + 1 >= track.trackWalls.size()) {
+            testAi.currentCell = 0;
+            testAi.target = track.trackWalls.get(testAi.currentCell).getCentre();
+        }
+        if (testAi.targetReached() && testAi.currentCell + 1 < track.trackWalls.size()) {
+            testAi.target = track.trackWalls.get(testAi.currentCell + 1).getCentre();
+            testAi.currentCell++;
         }
     }
+
+    public boolean finishGame(){
+        boolean one = false;
+        boolean two = false;
+        if (lapCount == laps) {
+            return true;
+        }
+
+        //checking if player corssed first track and half way track before completing round
+       //need to draw two lines and then check collisions for them
+
+        if (one && two){
+            lapCount++;
+            one = false;
+            two = false;
+            System.out.println(lapCount);
+        }
+
+
+        return false;
+    }
+
 
     public void collision() {
         for (int x = 0; x < track.worldSize; x++) {
             for (int y = 0; y < track.worldSize; y++) {
                 if (track.gameTrack[x][y].switchOn) {
-                    int width = track.gameTrack[x][y].width;
-                    int height = track.gameTrack[x][y].height;
+                    float width = track.gameTrack[x][y].width;
+                    float height = track.gameTrack[x][y].height;
                     PVector position = track.gameTrack[x][y].position;
                     CollisionDetected(position.x, position.y, width, height, player.position.x, player.position.y, player.size, player.size, x, y);
                 }
             }
         }
+
+        for (int i = 0; i < track.obstacles.size(); i++) {
+            CollisionDetected(track.obstacles.get(i).position.x, track.obstacles.get(i).position.y, track.obstacles.get(i).size, track.obstacles.get(i).size,
+                    player.position.x, player.position.y, player.size, player.size, 0, 0);
+        }
+
     }
 
     // adapted from 130006099
@@ -79,43 +110,30 @@ public class Game extends PApplet {
                 pPosy + pHeight >= rPosy + rHeight &&
                 (pPosx + pWidth >= rPosx && pPosx <= rPosx + rWidth) &&
                 !isNeighbour(x, y, "s")) {
-            track.gameTrack[x][y].setColor(0, 255, 0);
-            //System.out.println("collision top");
-            //track.velocity.y = -speed / initialVel;
-            player.velocity.y =+ speed / initialVel;
-            //return track.gameTrack[x][y];
+            //track.gameTrack[x][y].setColor(0, 255, 0);
+            player.velocity.y = +speed / initialVel;
         }
         if (pPosy + pHeight >= rPosy &&
                 pPosy <= rPosy &&
                 (pPosx + pWidth >= rPosx && pPosx <= rPosx + rWidth) &&
                 !isNeighbour(x, y, "w")) {
-            track.gameTrack[x][y].setColor(0, 0, 255);
-            //System.out.println("collision bottom");
-            //track.velocity.y = speed / initialVel;
-            player.velocity.y =- speed / initialVel;
-            //hasCollided = true;
+            //track.gameTrack[x][y].setColor(0, 0, 255);
+            player.velocity.y = -speed / initialVel;
         }
         if (pPosx + pWidth >= rPosx &&
                 pPosx <= rPosx &&
                 (pPosy + pHeight >= rPosy && pPosy <= rPosy + rHeight) &&
                 !isNeighbour(x, y, "l")) {
-            track.gameTrack[x][y].setColor(255, 0, 0);
-            //System.out.println("collision right");
-            //track.velocity.x = speed / initialVel;
-            player.velocity.x =- speed / initialVel;
-            //hasCollided = true;
+            //track.gameTrack[x][y].setColor(255, 0, 0);
+            player.velocity.x = -speed / initialVel;
         }
         if (pPosx <= rPosx + rWidth &&
                 pPosx + pWidth >= rPosx + rWidth &&
                 (pPosy + pHeight >= rPosy && pPosy <= rPosy + rHeight) &&
                 !isNeighbour(x, y, "r")) {
-            track.gameTrack[x][y].setColor(1, 1, 1);
-            //System.out.println("collision left");
-            //track.velocity.x = -speed / initialVel;
-            player.velocity.x =+ speed / initialVel;
-            //hasCollided = true;
+            // track.gameTrack[x][y].setColor(1, 1, 1);
+            player.velocity.x = +speed / initialVel;
         }
-
     }
 
     // adapted from 130006099
@@ -154,12 +172,10 @@ public class Game extends PApplet {
         if (isKeyPressed[DOWN]) {
             player.velocity.y += speed;
         }
-        //adding the velocity here
-//        track.updateTrack();
-//        track.displayTrack();
+
         player.updatePlayer();
-        camera.x = (player.position.x - MY_WIDTH/2);
-        camera.y = (player.position.y - MY_HEIGHT/2);
+        camera.x = (player.position.x - MY_WIDTH / 2);
+        camera.y = (player.position.y - MY_HEIGHT / 2);
         player.displayPlayer(255, 255, 40, camera);
     }
 

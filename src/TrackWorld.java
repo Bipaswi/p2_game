@@ -8,19 +8,18 @@ public class TrackWorld {
     public PVector position;
     public PVector velocity;
     public PApplet applet;
-    public PVector camera;
     //public ArrayList<TrackWall> trackWalls = new ArrayList<>();
+    public ArrayList<Obstacle> obstacles = new ArrayList<>();
     public int worldSize = 100;
-    public int size = 40;
+    public int size = 100;
     public TrackWall[][] gameTrack = new TrackWall[worldSize][worldSize];
     public int count = 1;
     ArrayList<TrackWall> trackWalls = new ArrayList<>();
 
-    TrackWorld(float x, float y, float xVel, float yVel, PVector camera, PApplet applet) {
+    TrackWorld(float x, float y, float xVel, float yVel, PApplet applet) {
         position = new PVector(x, y);
         velocity = new PVector(xVel, yVel);
         this.applet = applet;
-        this.camera = camera;
     }
 
     public void createTrack() {
@@ -28,7 +27,7 @@ public class TrackWorld {
         //gameTrack = trackGen.newTrack;
         for (int x = 0; x < worldSize; x++) {
             for (int y = 0; y < worldSize; y++) {
-                gameTrack[x][y] = new TrackWall(x * size, y * size, 0, 0, camera, size, size, true, applet);
+                gameTrack[x][y] = new TrackWall(x * size, y * size, 0, 0, size, size, true, applet);
             }
         }
         //trackDown(7, 12, 7);
@@ -43,12 +42,14 @@ public class TrackWorld {
         trackLeft(13, 11, 4);
         trackDown(4, 7, 11);
         trackLeft(11, 6, 7);
+        
+        createObstacles(1);
     }
 
     public void trackDown(int start, int length, int plane) {
         for (int i = start; i < length; i++) {
             //for (int y = start; y < length; y++) {
-                gameTrack[plane][i] = new TrackWall(plane * size, i * size, 0, 0, camera, size, size, false, applet);
+                gameTrack[plane][i] = new TrackWall(plane * size, i * size, 0, 0, size, size, false, applet);
                 trackWalls.add(gameTrack[plane][i]);
             //}
         }
@@ -56,71 +57,42 @@ public class TrackWorld {
 
     public void trackUp(int start, int length, int plane) {
         for (int i = start; i > length; i--) {
-            gameTrack[plane][i] = new TrackWall(plane * size, i * size, 0, 0, camera, size, size, false, applet);
+            gameTrack[plane][i] = new TrackWall(plane * size, i * size, 0, 0, size, size, false, applet);
             trackWalls.add(gameTrack[plane][i]);
         }
     }
 
     public void trackLeft(int start, int length, int plane) {
         for (int i = start; i > length; i--) {
-            gameTrack[i][plane] = new TrackWall(i * size, plane * size, 0, 0, camera,size, size, false, applet);
+            gameTrack[i][plane] = new TrackWall(i * size, plane * size, 0, 0, size, size, false, applet);
             trackWalls.add(gameTrack[i][plane]);
         }
     }
 
     public void trackRight(int start, int length, int plane) {
         for (int i = start; i < length; i++) {
-            gameTrack[i][plane] = new TrackWall(i * size, plane * size, 0, 0, camera, size, size, false, applet);
+            gameTrack[i][plane] = new TrackWall(i * size, plane * size, 0, 0, size, size, false, applet);
             trackWalls.add(gameTrack[i][plane]);
         }
     }
 
-//        gameTrack[7][7] = new TrackWall(7 * size, 7 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[7][7]);
-//        gameTrack[7][6] = new TrackWall(7 * size, 6 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[7][6]);
-//        gameTrack[7][5] = new TrackWall(7 * size, 5 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[7][5]);
-//        gameTrack[7][4] = new TrackWall(7 * size, 4 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[7][4]);
-//        gameTrack[7][3] = new TrackWall(7 * size, 3 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[7][3]);
-//
-//        gameTrack[6][3] = new TrackWall(6 * size, 3 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[6][3]);
-//        gameTrack[5][3] = new TrackWall(5 * size, 3 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[5][3]);
-//        gameTrack[4][3] = new TrackWall(4 * size, 3 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[4][3]);
-//
-//        gameTrack[4][4] = new TrackWall(4 * size, 4 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[4][4]);
-//        gameTrack[4][5] = new TrackWall(4 * size, 5 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[4][5]);
-//        gameTrack[4][6] = new TrackWall(4 * size, 6 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[4][6]);
-//        gameTrack[4][7] = new TrackWall(4 * size, 7 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[4][7]);
-//
-//        gameTrack[5][7] = new TrackWall(5 * size, 7 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[5][7]);
-//        gameTrack[6][7] = new TrackWall(6 * size, 7 * size, 0, 0, size, size, false, applet);
-//        trackWalls.add(gameTrack[6][7]);
+    public void createObstacles(int amount) {
+        for (int i = 1; i < trackWalls.size(); i++) {
+            float x_ = applet.random(trackWalls.get(i).position.x, trackWalls.get(i).position.x + trackWalls.get(i).width);
+            float y_ = applet.random(trackWalls.get(i).position.y, trackWalls.get(i).position.y + trackWalls.get(i).height);
+            obstacles.add(new Obstacle(x_, y_, 10, applet));
+        }
+    }
 
 
-//    public void updateTrack() {
-//        for(int x = 0; x < worldSize; x++) {
-//            for (int y = 0; y < worldSize; y++) {
-//                gameTrack[x][y].position.add(velocity);
-//            }
-//        }
-//    }
-
-    public void displayTrack() {
+    public void displayTrack(PVector camera) {
         for(int x = 0; x < worldSize; x++) {
             for (int y = 0; y < worldSize; y++) {
                gameTrack[x][y].displayWall(camera);
             }
+        }
+        for (int i = 0; i < obstacles.size(); i++) {
+            obstacles.get(i).display(camera);
         }
     }
 }

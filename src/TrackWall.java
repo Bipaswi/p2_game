@@ -4,16 +4,16 @@ import processing.core.PVector;
 public class TrackWall extends TrackWorld{
 
     //public PVector position;
-    public int width;
-    public int height;
+    public float width;
+    public float height;
     PVector centre;
     public PApplet applet;
     public boolean switchOn;
     public int wallNumber = 0;
     public int color;
 
-    TrackWall(float x, float y, float xVel, float yVel, PVector camera, int width, int height, boolean switchOn, PApplet applet) {
-        super(x, y, xVel, yVel, camera, applet);
+    TrackWall(float x, float y, float xVel, float yVel, float width, float height, boolean switchOn, PApplet applet) {
+        super(x, y, xVel, yVel, applet);
         position = new PVector(x, y);
         velocity = new PVector(xVel, yVel);
         this.width = width;

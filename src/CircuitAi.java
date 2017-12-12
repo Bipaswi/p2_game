@@ -14,11 +14,11 @@ final class CircuitAi {
     PApplet applet;
     public PVector target;
     public int currentCell;
-    public final float MAX_SPEED = 2f;
+    public final float MAX_SPEED = 1.9f;
     public float currentSpeed;
-    PVector camera;
+   // PVector camera;
 
-    CircuitAi(int x, int y, float xVel, float yVel, float invM, int size, PVector camera, PApplet applet) {
+    CircuitAi(int x, int y, float xVel, float yVel, float invM, int size, PApplet applet) {
         position = new PVector(x, y);
         velocity = new PVector(xVel, yVel);
         forceAccumulator = new PVector(0, 0);
@@ -29,7 +29,7 @@ final class CircuitAi {
         linear = new PVector(0, 0);
         target = this.position;
         this.currentCell = 0;
-        this.camera = camera;
+       // this.camera = camera;
         currentSpeed = MAX_SPEED; // change this to change speed difference
         //c = color(random(255),random(255),random(255));
     }
