@@ -11,7 +11,7 @@ public class TrackWorld {
     //public ArrayList<TrackWall> trackWalls = new ArrayList<>();
     public ArrayList<Obstacle> obstacles = new ArrayList<>();
     public int worldSize = 100;
-    public int size = 100;
+    public int size = 150;
     public TrackWall[][] gameTrack = new TrackWall[worldSize][worldSize];
     public int count = 1;
     ArrayList<TrackWall> trackWalls = new ArrayList<>();
@@ -83,7 +83,6 @@ public class TrackWorld {
             obstacles.add(new Obstacle(x_, y_, 10, applet));
         }
     }
-
 
     public void displayTrack(PVector camera) {
         for(int x = 0; x < worldSize; x++) {

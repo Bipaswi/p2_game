@@ -31,10 +31,11 @@ public class Game extends PApplet {
 
     public void setup() {
         frameRate(FPS);
-        player = new Player(750, 750, 10, this);
+        player = new Player(1100, 1100, 10, this);
         track = new TrackWorld(300, 300, 0f, 0f, this);
-        testAi = new CircuitAi(735, 750, 1f, 1f, 0.2f, 10, this);
+        testAi = new CircuitAi(1100, 1100, 1f, 1f, 0.2f, 10, this);
         //testObstacle = new Obstacle(300, 210, 10, this);
+        rectMode(CORNER);
         track.createTrack();
 
     }
@@ -45,8 +46,9 @@ public class Game extends PApplet {
         moveAi();
         collision();
         movePlayer();
-        //testObstacle.display(camera);
+//        testObstacle.display(camera);
         track.displayTrack(camera);
+
         //finishGame();
     }
 
@@ -106,33 +108,35 @@ public class Game extends PApplet {
     // adapted from 130006099
     public void CollisionDetected(float rPosx, float rPosy, float rWidth, float rHeight, float pPosx, float pPosy, float pWidth, float pHeight, int x, int y) {
         // boolean hasCollided = false;
+
         if (pPosy <= rPosy + rHeight &&
                 pPosy + pHeight >= rPosy + rHeight &&
                 (pPosx + pWidth >= rPosx && pPosx <= rPosx + rWidth) &&
                 !isNeighbour(x, y, "s")) {
-            //track.gameTrack[x][y].setColor(0, 255, 0);
-            player.velocity.y = +speed / initialVel;
+            track.gameTrack[x][y].setColor(0, 255, 0);
+           // System.out.println("top");
+            player.velocity.y = -speed / initialVel;
         }
         if (pPosy + pHeight >= rPosy &&
                 pPosy <= rPosy &&
                 (pPosx + pWidth >= rPosx && pPosx <= rPosx + rWidth) &&
                 !isNeighbour(x, y, "w")) {
-            //track.gameTrack[x][y].setColor(0, 0, 255);
-            player.velocity.y = -speed / initialVel;
+            track.gameTrack[x][y].setColor(0, 0, 255);
+            player.velocity.y = +speed / initialVel;
         }
         if (pPosx + pWidth >= rPosx &&
                 pPosx <= rPosx &&
                 (pPosy + pHeight >= rPosy && pPosy <= rPosy + rHeight) &&
                 !isNeighbour(x, y, "l")) {
-            //track.gameTrack[x][y].setColor(255, 0, 0);
-            player.velocity.x = -speed / initialVel;
+            track.gameTrack[x][y].setColor(255, 0, 0);
+            player.velocity.x = +speed / initialVel;
         }
         if (pPosx <= rPosx + rWidth &&
                 pPosx + pWidth >= rPosx + rWidth &&
                 (pPosy + pHeight >= rPosy && pPosy <= rPosy + rHeight) &&
                 !isNeighbour(x, y, "r")) {
-            // track.gameTrack[x][y].setColor(1, 1, 1);
-            player.velocity.x = +speed / initialVel;
+            track.gameTrack[x][y].setColor(1, 1, 1);
+            player.velocity.x = -speed / initialVel;
         }
     }
 
@@ -157,26 +161,35 @@ public class Game extends PApplet {
     }
 
     public void movePlayer() {
-        player.velocity.x *= initialVel;
-        player.velocity.y *= initialVel;
+        //player.velocity.x *= initialVel;
+        //player.velocity.y *= initialVel;
 
+        player.initPlayer();
         if (isKeyPressed[LEFT]) {
-            player.velocity.x -= speed;
+            //player.velocity.x -= speed;
+            player.angle += 0.04 * player.factor;
+            player.steerAngle = - PI * 0.3f;
         }
         if (isKeyPressed[RIGHT]) {
-            player.velocity.x += speed;
+            //player.velocity.x += speed;
+            player.angle -= 0.04 * player.factor;
+            player.steerAngle = PI * 0.3f;
         }
+        player.force.add(PVector.mult(player.vector1, -player.forwardVelocity * 0.1f));
         if (isKeyPressed[UP]) {
-            player.velocity.y -= speed;
+           // player.velocity.y -= speed;
+            player.force.add(PVector.mult(player.vector1, 1.0f));
         }
         if (isKeyPressed[DOWN]) {
-            player.velocity.y += speed;
+           // player.velocity.y += speed;
+            player.force.add(PVector.mult(player.vector1, -0.5f));
         }
 
-        player.updatePlayer();
         camera.x = (player.position.x - MY_WIDTH / 2);
         camera.y = (player.position.y - MY_HEIGHT / 2);
-        player.displayPlayer(255, 255, 40, camera);
+        player.updatePlayer(camera);
+
+        //player.displayPlayer(255, 255, 40, camera);
     }
 
     public void keyPressed() {

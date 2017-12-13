@@ -24,7 +24,7 @@ public class TrackWall extends TrackWorld{
     }
 
     public PVector getCentre(){
-        PVector center = new PVector(position.x + this.width/2, position.y + this.height/2);
+        PVector center = new PVector(position.x + width/2, position.y + height/2);
         return center;
     }
 
